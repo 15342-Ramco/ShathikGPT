@@ -28,7 +28,7 @@ app.add_middleware(
 async def generate(request: Request):
     data = await request.json()
     user_input = data.get("text", "")
-    output = generator(user_input, max_length=200, num_return_sequences=1)
+    output = generator(user_input, max_length=100, num_return_sequences=1)
     return {"response": output[0]["generated_text"]}
 
 # ✅ For local testing only
