@@ -24,5 +24,5 @@ class Prompt(BaseModel):
 
 @app.post("/generate")
 def generate(prompt: Prompt):
-    output = generator(prompt.text, max_length=150, do_sample=True)[0]['generated_text']
+    output = generator(prompt.text, max_length=100, do_sample=True)[0]['generated_text']
     return {"generated_text": output}
