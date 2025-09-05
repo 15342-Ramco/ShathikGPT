@@ -12,7 +12,7 @@ async function sendMessage() {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
     try {
-        const response = await fetch("https://your-backend-domain.com/generate", {
+        const response = await fetch("https://shathikgpt.onrender.com/generate", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({text: text})
