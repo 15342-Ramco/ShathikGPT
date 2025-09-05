@@ -1,0 +1,2 @@
+# ShathikGPT
+Langchain +LLM deployment
