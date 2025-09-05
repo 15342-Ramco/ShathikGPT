@@ -1,42 +1,38 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
-from langchain.llms import HuggingFacePipeline
-from fastapi.middleware.cors import CORSMiddleware
 import os
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 
+# Load Hugging Face token from environment variable
 HF_TOKEN = os.environ.get("HF_TOKEN")
+MODEL_NAME = "google/flan-t5-small"
 
-app = FastAPI(title="Shathik GPT Backend")
+# Load model & tokenizer
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_auth_token=HF_TOKEN)
+model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME, use_auth_token=HF_TOKEN)
+generator = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
 
-# Enable CORS for frontend
+# FastAPI app
+app = FastAPI()
+
+# Allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace '*' with your frontend URL in production
+    allow_origins=["*"],  # you can restrict to your frontend URL later
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Hugging Face token
-
-MODEL_NAME = "google/flan-t5-small"
-
-# Load model & tokenizer once at startup
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_auth_token=HF_TOKEN)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME, use_auth_token=HF_TOKEN)
-generator = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
-llm = HuggingFacePipeline(pipeline=generator)
-
-# Request model
-class Prompt(BaseModel):
-    text: str
-
 @app.post("/generate")
-def generate(prompt: Prompt):
-    output = llm(prompt.text)
-    return {"generated_text": output}
+async def generate(request: Request):
+    data = await request.json()
+    user_input = data.get("text", "")
+    output = generator(user_input, max_length=200, num_return_sequences=1)
+    return {"response": output[0]["generated_text"]}
 
-# Optional root endpoint
-@app.get("/")
-def read_root():
-    return {"message": "CatGPT backend is live!"}
+# ✅ For local testing only
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
