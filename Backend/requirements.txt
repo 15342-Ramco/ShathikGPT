@@ -4,3 +4,4 @@ gunicorn
 transformers
 torch
 langchain
+langchain-community
