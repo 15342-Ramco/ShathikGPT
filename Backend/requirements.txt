@@ -3,3 +3,4 @@ uvicorn
 gunicorn
 transformers
 torch
+langchain
